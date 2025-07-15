@@ -1,4 +1,3 @@
-
 import os
 from flask import Flask, request
 import requests
@@ -15,16 +14,17 @@ def send_to_telegram(chat_id, text):
 
 @app.route("/", methods=["POST"])
 def webhook():
-    data = request.get_json()
+    data = request.get_json(force=True)
     if "message" in data:
         chat_id = data["message"]["chat"]["id"]
         message_text = data["message"].get("text", "")
 
         # Bitrix24 ga yuborish
-        if message_text:
+        if message_text and BITRIX24_WEBHOOK_URL:
             requests.post(BITRIX24_WEBHOOK_URL, json={"fields": {"TITLE": message_text}})
             send_to_telegram(chat_id, "Xabaringiz Bitrix24 ga yuborildi.")
     return "OK", 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
